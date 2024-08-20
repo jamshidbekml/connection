@@ -1,63 +1,62 @@
-import React, { useEffect, useState } from 'react';
+import reactLogo from './assets/react.svg';
+import viteLogo from '/vite.svg';
+import './App.css';
 
-const WebSocketComponent: React.FC = () => {
-  const [ws, setWs] = useState<WebSocket | null>(null);
-  const [messageLog, setMessageLog] = useState<string[]>([]);
+// Example usage:
+// connectWebSocketExtension('ws://192.168.208.213:8888');
+// sendMessageToWebSocketExtension('Hello WebSocket');
 
-  useEffect(() => {
-    // Create WebSocket connection.
-    const websocket = new WebSocket('ws://172.10.10.39:8888');
-    setWs(websocket);
+function App() {
+    window.addEventListener('message', (event) => {
+        if (event.data.type !== 'FROM_EXTENSION') {
+            return;
+        }
 
-    // Connection opened
-    websocket.onopen = () => {
-      alert('Connected to WebSocket server');
-      // websocket.send('Hello Server!'); 
-    };
+        alert(event.data.message);
+    });
+    return (
+        <>
+            <div>
+                <a href="https://vitejs.dev" target="_blank">
+                    <img src={viteLogo} className="logo" alt="Vite logo" />
+                </a>
+                <a href="https://react.dev" target="_blank">
+                    <img
+                        src={reactLogo}
+                        className="logo react"
+                        alt="React logo"
+                    />
+                </a>
+            </div>
+            <form
+                onSubmit={(e) => {
+                    e.preventDefault();
+                    const formData = new FormData(e.target as HTMLFormElement);
+                    window.postMessage(
+                        {
+                            type: 'FROM_PAGE',
+                            command: 'connect',
+                            url: formData.get('url'),
+                        },
+                        '*'
+                    );
+                }}
+            >
+                <div>
+                    <input
+                        name="url"
+                        type="text"
+                        className="form-control mb-3"
+                        placeholder="Enter URL"
+                        required
+                    />
+                </div>
+                <button type="submit" className="btn btn-primary">
+                    Connect
+                </button>
+            </form>
+        </>
+    );
+}
 
-    // Listen for messages
-    websocket.onmessage = (event) => {
-      console.log('Message from server: ', event.data);
-      setMessageLog((prevLog) => [...prevLog, event.data]);
-    };
-
-    // Handle errors
-    websocket.onerror = (error) => {
-      console.error('WebSocket error: ', error);
-    };
-
-    // Connection closed
-    websocket.onclose = () => {
-      console.log('WebSocket connection closed');
-    };
-
-    // Cleanup on component unmount
-    return () => {
-      websocket.close();
-    };
-  }, []);
-
-  // Function to send a message
-  const sendMessage = () => {
-    if (ws) {
-      ws.send('Another message from client');
-    }
-  };
-
-  return (
-    <div>
-      <h1>WebSocket Connection</h1>
-      <button onClick={sendMessage}>Send Message</button>
-      <div>
-        <h2>Message Log:</h2>
-        <ul>
-          {messageLog.map((msg, index) => (
-            <li key={index}>{msg}</li>
-          ))}
-        </ul>
-      </div>
-    </div>
-  );
-};
-
-export default WebSocketComponent;
+export default App;
